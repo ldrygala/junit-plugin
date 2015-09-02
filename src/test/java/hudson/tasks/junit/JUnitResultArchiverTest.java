@@ -100,9 +100,30 @@ public class JUnitResultArchiverTest {
 		wc.getPage(build, "testReport/hudson.security"); // package
 		wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
 		wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
-		
-
 	}
+
+    @LocalData
+    @Test public void basicSuitePrefix() throws Exception {
+        archiver.setSuitePrefix("das.prefix.");
+        FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
+
+        assertTestResults(build);
+
+        WebClient wc = j.new WebClient();
+        wc.getPage(project); // project page
+        wc.getPage(build); // build page
+        wc.getPage(build, "testReport");  // test report
+        wc.getPage(build, "testReport/hudson.security"); // package
+        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
+        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
+        //OK good it looks like before
+
+        //Now what about the suite name?
+        TestResultAction testResultAction = build.getAction(TestResultAction.class);
+        assertNull(testResultAction.getResult().getSuite("hudson.security.HudsonPrivateSecurityRealmTest"));
+        assertNotNull(testResultAction.getResult().getSuite("das.prefix.hudson.security.HudsonPrivateSecurityRealmTest"));
+
+    }
 
     @RandomlyFails("TimeoutException from basic")
    @LocalData
@@ -260,9 +281,11 @@ public class JUnitResultArchiverTest {
         a.setKeepLongStdio(true);
         a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
+        a.setSuitePrefix("das.prefix.");
         a = j.configRoundtrip(a);
         assertEquals("TEST-*.xml", a.getTestResults());
         assertTrue(a.isKeepLongStdio());
+        assertEquals("das.prefix.", a.getSuitePrefix());
         List<? extends TestDataPublisher> testDataPublishers = a.getTestDataPublishers();
         assertEquals(1, testDataPublishers.size());
         assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());

@@ -48,6 +48,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
+
 /**
  * Root of all the test results for one build.
  *
@@ -91,6 +93,7 @@ public final class TestResult extends MetaTabulatedResult {
     private transient List<CaseResult> failedTests;
 
     private final boolean keepLongStdio;
+    private final String suitePrefix;
 
     /**
      * Creates an empty result.
@@ -103,12 +106,17 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.522
      */
     public TestResult(boolean keepLongStdio) {
+        this(keepLongStdio, null);
+    }
+
+    public TestResult(boolean keepLongStdio, @CheckForNull String suitePrefix) {
         this.keepLongStdio = keepLongStdio;
+        this.suitePrefix = suitePrefix;
     }
 
     @Deprecated
     public TestResult(long buildTime, DirectoryScanner results) throws IOException {
-        this(buildTime, results, false);
+        this(buildTime, results, false, null);
     }
 
     /**
@@ -117,8 +125,20 @@ public final class TestResult extends MetaTabulatedResult {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
      */
+    @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
+        this(buildTime, results, keepLongStdio, null);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param suitePrefix if non null all test suites parsed will have it's name prefixed with this string.
+     */
+    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, @CheckForNull String suitePrefix) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        this.suitePrefix = suitePrefix;
         parse(buildTime, results);
     }
 
@@ -221,7 +241,11 @@ public final class TestResult extends MetaTabulatedResult {
     private void parsePossiblyEmpty(File reportFile) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
-            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
+            String name = reportFile.getName();
+            if (Util.fixEmpty(suitePrefix) != null) {
+                name = suitePrefix + name;
+            }
+            SuiteResult sr = new SuiteResult(name, "", "");
             sr.addCase(new CaseResult(sr,"<init>","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
             add(sr);
         } else {
@@ -279,7 +303,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public void parse(File reportFile) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, suitePrefix))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);

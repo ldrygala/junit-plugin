@@ -37,6 +37,8 @@ import jenkins.MasterToSlaveFileCallable;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
+import javax.annotation.CheckForNull;
+
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed. 
@@ -45,19 +47,30 @@ import org.apache.tools.ant.DirectoryScanner;
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
+    private final String suitePrefix;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
     public JUnitParser() {
-        this(false);
+        this(false, null);
     }
 
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
      */
+    @Deprecated
     public JUnitParser(boolean keepLongStdio) {
+        this(keepLongStdio, null);
+    }
+
+    /**
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param suitePrefix if non null all test suites parsed will have it's name prefixed with this string.
+     */
+    public JUnitParser(boolean keepLongStdio, @CheckForNull String suitePrefix) {
         this.keepLongStdio = keepLongStdio;
+        this.suitePrefix = suitePrefix;
     }
 
     @Override
@@ -87,7 +100,7 @@ public class JUnitParser extends TestResultParser {
         // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
         
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio));
+        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, suitePrefix));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -95,12 +108,14 @@ public class JUnitParser extends TestResultParser {
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
+        private final String suitePrefix;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio) {
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, @CheckForNull String suitePrefix) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
+            this.suitePrefix = suitePrefix;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -116,7 +131,7 @@ public class JUnitParser extends TestResultParser {
                 throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
             }
 
-            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, suitePrefix);
             result.tally();
             return result; 
         }

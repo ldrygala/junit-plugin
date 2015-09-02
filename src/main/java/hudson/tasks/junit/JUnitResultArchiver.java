@@ -52,6 +52,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -73,6 +74,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      * @since 1.358
      */
     private boolean keepLongStdio;
+
+
+    /**
+     * A prefix to put on all test suite names, null == none.
+     */
+    private String suitePrefix = null;
 
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
@@ -117,7 +124,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(isKeepLongStdio()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return new JUnitParser(isKeepLongStdio(), suitePrefix).parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -230,7 +237,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.keepLongStdio = keepLongStdio;
     }
 
-	private static final long serialVersionUID = 1L;
+    public String getSuitePrefix() {
+        return suitePrefix;
+    }
+
+    @DataBoundSetter
+    public void setSuitePrefix(String suitePrefix) {
+        this.suitePrefix = suitePrefix;
+    }
+
+    private static final long serialVersionUID = 1L;
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {

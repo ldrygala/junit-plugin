@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Util;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
@@ -32,6 +33,7 @@ import org.dom4j.io.SAXReader;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -113,7 +115,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String suitePrefix) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -123,22 +125,22 @@ public final class SuiteResult implements Serializable {
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        parseSuite(xmlReport, keepLongStdio, suitePrefix, r, root);
 
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, @CheckForNull String suitePrefix, List<SuiteResult> r, Element root) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, suitePrefix, r, suite);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, suitePrefix));
     }
 
     /**
@@ -146,8 +148,10 @@ public final class SuiteResult implements Serializable {
      *      A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite
      *      The parsed result of {@code xmlReport}
+     * @param suitePrefix
+     *      if non null or non empty all test suites parsed will have it's name prefixed with this string.
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String suitePrefix) throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
         if(name==null)
@@ -157,6 +161,9 @@ public final class SuiteResult implements Serializable {
         else {
             String pkg = suite.attributeValue("package");
             if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+        }
+        if (Util.fixEmpty(suitePrefix) != null) {
+            name = suitePrefix + name;
         }
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
