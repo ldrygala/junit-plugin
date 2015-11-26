@@ -303,6 +303,32 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         }
     }
 
+    public void setUser(String user) {
+        AbstractTestResultAction action = getTestResultAction();
+        if (action != null) {
+            action.setUser(this, user);
+        }
+    }
+
+    public void removeUser(String user) {
+        AbstractTestResultAction action = getTestResultAction();
+        if (action != null) {
+            action.removeUser(this);
+        }
+    }
+
+    public String getUser() {
+        AbstractTestResultAction action = getTestResultAction();
+        if (action != null) {
+            return action.getUser(this);
+        }
+        return "";
+    }
+
+    public boolean isAssignToMe() {
+        return Objects.equals(getUser(),User.current().getDisplayName());
+    }
+
     /**
      * Exposes this object through the remote API.
      */
@@ -425,6 +451,35 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return null;
     }
 
+    public synchronized HttpResponse doAssign() throws IOException,
+            ServletException {
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            LOGGER.severe("getRun() is null, can't save description.");
+        } else {
+            run.checkPermission(Run.UPDATE);
+            setUser(User.current().getDisplayName());
+            run.save();
+        }
+
+        return new HttpRedirect(".");
+    }
+
+    public synchronized HttpResponse doUnassign() throws IOException,
+            ServletException {
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            LOGGER.severe("getRun() is null, can't save description.");
+        } else {
+            run.checkPermission(Run.UPDATE);
+            removeUser(User.current().getDisplayName());
+            run.save();
+        }
+
+        return new HttpRedirect(".");
+    }
+
+
     public synchronized HttpResponse doSubmitDescription(
             @QueryParameter String description) throws IOException,
             ServletException {
@@ -438,5 +493,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
         return new HttpRedirect(".");
     }
+
+
     private static final long serialVersionUID = 1L;
+
+
 }

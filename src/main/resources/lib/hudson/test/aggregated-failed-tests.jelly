@@ -47,12 +47,14 @@ THE SOFTWARE.
         <table class="pane sortable bigtable">
           <tr>
             <td class="pane-header">Test Name</td>
+            <td class="pane-header" style="width:4em">Assign to</td>
             <td class="pane-header" style="width:4em">Duration</td>
             <td class="pane-header" style="width:4em">Age</td>
           </tr>
           <j:forEach var="f" items="${report.result.failedTests}" varStatus="i">
             <tr>
               <td class="pane"><t:failed-test result="${f}" url="../${report.child.project.shortUrl}testReport/${f.getRelativePathFrom(report.result)}"/></td>
+              <td class="pane" style="text-align:right;">${f.user}</td>
               <td class="pane" style="text-align:right;">${f.duration}</td>
               <td class="pane" style="text-align:right;">${f.age}</td>
             </tr>

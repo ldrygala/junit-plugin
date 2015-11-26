@@ -58,9 +58,13 @@ THE SOFTWARE.
         <a href="history">
           ${%took(it.durationString)}
         </a>
+                <form action="assign" method="POST">
+                    <input type="submit" value="Assign to me"/>
+                 </form>
       </div>
 
       <t:editableDescription permission="${it.run.UPDATE}"/>
+
 
       <table style="margin-top: 1em; margin-left:0em;">
 		    <j:forEach var="action" items="${it.testActions}">

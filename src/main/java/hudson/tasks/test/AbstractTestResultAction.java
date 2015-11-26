@@ -28,14 +28,6 @@ import hudson.Functions;
 import hudson.model.*;
 import hudson.util.*;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
-
-import java.awt.*;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -53,6 +45,14 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Common base class for recording test result.
@@ -74,6 +74,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     public transient AbstractBuild<?,?> owner;
 
     private Map<String,String> descriptions = new ConcurrentHashMap<String, String>();
+    private Map<String,String> users = new ConcurrentHashMap<String, String>();
 
     /** @since 1.545 */
     protected AbstractTestResultAction() {}
@@ -271,7 +272,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     public void doGraphMap( StaplerRequest req, StaplerResponse rsp) throws IOException {
         if(req.checkIfModified(run.getTimestamp(),rsp))
             return;
-        ChartUtil.generateClickableMap(req,rsp,createChart(req,buildDataSet(req)),calcDefaultSize());
+        ChartUtil.generateClickableMap(req, rsp, createChart(req, buildDataSet(req)), calcDefaultSize());
     }
 
     /**
@@ -406,16 +407,36 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     protected String getDescription(TestObject object) {
     	return descriptions.get(object.getId());
     }
+    protected String getUser(TestObject object) {
+        String user = users.get(object.getId());
+        if(user == null) {
+            user = getPreviousResult().getUser(object);
+        }
+        return user;
+    }
+    protected Map<String, String> getUsers() {
+    	return users;
+    }
 
     protected void setDescription(TestObject object, String description) {
     	descriptions.put(object.getId(), description);
+    }
+
+    protected void setUser(TestObject object, String user) {
+    	users.put(object.getId(), user);
+    }
+    protected void removeUser(TestObject object ) {
+        users.remove(object.getId());
     }
 
     public Object readResolve() {
     	if (descriptions == null) {
     		descriptions = new ConcurrentHashMap<String, String>();
     	}
-    	
+    	if (users == null) {
+    		users = new ConcurrentHashMap<String, String>();
+    	}
+
     	return this;
     }
 
