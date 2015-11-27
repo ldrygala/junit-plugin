@@ -56,7 +56,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     private static final Logger LOGGER = Logger.getLogger(TestObject.class.getName());
     private volatile transient String id;
-
+    private boolean assigned = false;
     /**
      * Reverse pointer of {@link TabulatedResult#getChildren()}.
      */
@@ -308,6 +308,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         AbstractTestResultAction action = getTestResultAction();
         if (action != null) {
             Test2UserDb.assign(this.getId(),user);
+            assigned=true;
         }
     }
 
@@ -321,6 +322,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public String getUser() {
         AbstractTestResultAction action = getTestResultAction();
         if (action != null) {
+            if (getPreviousResult().isPassed() && !assigned) {
+                Test2UserDb.unassign(this.getId());
+            }
             return Test2UserDb.getAssignedUser(this.getId());
         }
         return "";

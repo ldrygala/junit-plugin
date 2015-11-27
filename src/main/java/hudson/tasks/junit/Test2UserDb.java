@@ -1,6 +1,8 @@
 package hudson.tasks.junit;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,5 +28,14 @@ public final class Test2UserDb {
 
     public static void unassign(String test) {
         test2User.remove(test);
+    }
+
+    public static void removeOtherThen(List<String> tests) {
+        Set<String> testsAssignedToUser = test2User.keySet();
+        for (String t2u : testsAssignedToUser) {
+            if (!tests.contains(t2u)) {
+                test2User.remove(t2u);
+            }
+        }
     }
 }
