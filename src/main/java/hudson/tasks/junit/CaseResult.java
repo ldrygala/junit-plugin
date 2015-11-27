@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.model.User;
 import hudson.util.TextFile;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
@@ -528,7 +529,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public boolean isSkipped() {
         return skipped;
     }
-    
+
+    public boolean isLogged() {
+        return User.current() != null;
+    }
     /**
      * @return true if the test was not skipped and did not pass, false otherwise.
      * @since 1.520

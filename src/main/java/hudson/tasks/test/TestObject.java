@@ -457,11 +457,14 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
         } else {
-            run.checkPermission(Run.UPDATE);
-            setUser(User.current().getDisplayName());
-            run.save();
-        }
+            User current = User.current();
 
+            if (current != null) {
+                run.checkPermission(Run.UPDATE);
+                setUser(current.getDisplayName());
+                run.save();
+            }
+        }
         return new HttpRedirect(".");
     }
 
@@ -471,9 +474,13 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
         } else {
-            run.checkPermission(Run.UPDATE);
-            removeUser(User.current().getDisplayName());
-            run.save();
+            User current = User.current();
+
+            if (current != null) {
+                run.checkPermission(Run.UPDATE);
+                removeUser(current.getDisplayName());
+                run.save();
+            }
         }
 
         return new HttpRedirect(".");
@@ -483,12 +490,13 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public synchronized HttpResponse doSubmitDescription(
             @QueryParameter String description) throws IOException,
             ServletException {
-        if (getRun() == null) {
+        Run<?, ?> run = getRun();
+        if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
         } else {
-            getRun().checkPermission(Run.UPDATE);
+            run.checkPermission(Run.UPDATE);
             setDescription(description);
-            getRun().save();
+            run.save();
         }
 
         return new HttpRedirect(".");
