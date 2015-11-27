@@ -74,7 +74,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     public transient AbstractBuild<?,?> owner;
 
     private Map<String,String> descriptions = new ConcurrentHashMap<String, String>();
-    private Map<String,String> users = new ConcurrentHashMap<String, String>();
+//    private Map<String,String> users = new ConcurrentHashMap<String, String>();
 
     /** @since 1.545 */
     protected AbstractTestResultAction() {}
@@ -407,35 +407,36 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     protected String getDescription(TestObject object) {
     	return descriptions.get(object.getId());
     }
-    protected String getUser(TestObject object) {
-        String user = users.get(object.getId());
-        if(user == null) {
-            user = getPreviousResult().getUser(object);
-        }
-        return user;
-    }
-    protected Map<String, String> getUsers() {
-    	return users;
-    }
+
+//    protected String getUser(TestObject object) {
+//        String user = users.get(object.getId());
+//        if(user == null) {
+//            user = getPreviousResult().getUser(object);
+//        }
+//        return user;
+//    }
+//    protected Map<String, String> getUsers() {
+//    	return users;
+//    }
 
     protected void setDescription(TestObject object, String description) {
     	descriptions.put(object.getId(), description);
     }
 
-    protected void setUser(TestObject object, String user) {
-    	users.put(object.getId(), user);
-    }
-    protected void removeUser(TestObject object ) {
-        users.remove(object.getId());
-    }
+//    protected void setUser(TestObject object, String user) {
+//    	users.put(object.getId(), user);
+//    }
+//    protected void removeUser(TestObject object ) {
+//        users.remove(object.getId());
+//    }
 
     public Object readResolve() {
     	if (descriptions == null) {
     		descriptions = new ConcurrentHashMap<String, String>();
     	}
-    	if (users == null) {
-    		users = new ConcurrentHashMap<String, String>();
-    	}
+//    	if (users == null) {
+//    		users = new ConcurrentHashMap<String, String>();
+//    	}
 
     	return this;
     }

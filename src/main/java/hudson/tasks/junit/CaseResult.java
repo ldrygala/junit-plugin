@@ -533,6 +533,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public boolean isLogged() {
         return User.current() != null;
     }
+
+    public boolean isAssign() {
+        return Test2UserDb.isAssigned(this.getId());
+    }
     /**
      * @return true if the test was not skipped and did not pass, false otherwise.
      * @since 1.520

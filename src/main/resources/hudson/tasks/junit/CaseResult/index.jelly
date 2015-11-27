@@ -60,12 +60,21 @@ THE SOFTWARE.
         </a>
             <j:choose>
                 <j:when test="${it.logged}">
-                    <form action="assign" method="POST">
-                        <input type="submit" value="Assign to me"/>
-                     </form>
+                    <j:choose>
+                        <j:when test="${it.assignToMe}">
+                             <form action="unassign" method="POST">
+                                <input type="submit" value="Unassign"/>
+                             </form>
+                        </j:when>
+                        <j:otherwise>
+                            <j:if test="${!it.assign}">
+                                <form action="assign" method="POST">
+                                    <input type="submit" value="Assign to me"/>
+                                 </form>
+                            </j:if>
+                        </j:otherwise>
+                    </j:choose>
                 </j:when>
-                <j:otherwise>
-                </j:otherwise>
             </j:choose>
       </div>
 

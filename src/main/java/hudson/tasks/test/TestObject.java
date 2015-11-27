@@ -28,6 +28,7 @@ import hudson.Util;
 import hudson.Functions;
 import hudson.model.*;
 import hudson.tasks.junit.History;
+import hudson.tasks.junit.Test2UserDb;
 import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
 import jenkins.model.Jenkins;
@@ -303,24 +304,24 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         }
     }
 
-    public void setUser(String user) {
+    public void assign(String user) {
         AbstractTestResultAction action = getTestResultAction();
         if (action != null) {
-            action.setUser(this, user);
+            Test2UserDb.assign(this.getId(),user);
         }
     }
 
-    public void removeUser(String user) {
+    public void unassign(String user) {
         AbstractTestResultAction action = getTestResultAction();
         if (action != null) {
-            action.removeUser(this);
+            Test2UserDb.unassign(this.getId());
         }
     }
 
     public String getUser() {
         AbstractTestResultAction action = getTestResultAction();
         if (action != null) {
-            return action.getUser(this);
+            return Test2UserDb.getAssignedUser(this.getId());
         }
         return "";
     }
@@ -461,7 +462,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
             if (current != null) {
                 run.checkPermission(Run.UPDATE);
-                setUser(current.getDisplayName());
+                assign(current.getDisplayName());
                 run.save();
             }
         }
@@ -478,7 +479,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
             if (current != null) {
                 run.checkPermission(Run.UPDATE);
-                removeUser(current.getDisplayName());
+                unassign(current.getDisplayName());
                 run.save();
             }
         }
