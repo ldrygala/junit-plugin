@@ -60,6 +60,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * In JUnit, a test is a method of a class. This field holds the fully qualified class name
      * that the test was in.
      */
+    
     private final String className;
     /**
      * This field retains the method name.
