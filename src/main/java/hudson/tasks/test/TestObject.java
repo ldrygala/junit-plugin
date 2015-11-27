@@ -484,7 +484,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             }
         }
 
-        return new HttpRedirect(".");
+        return new HttpRedirect("../../../");
     }
 
 
