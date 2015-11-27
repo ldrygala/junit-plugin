@@ -466,7 +466,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                 run.save();
             }
         }
-        return new HttpRedirect(".");
+        return new HttpRedirect("../../../");
     }
 
     public synchronized HttpResponse doUnassign() throws IOException,
